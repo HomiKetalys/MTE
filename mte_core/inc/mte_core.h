@@ -7,6 +7,6 @@
 
 #include "mte_crs.h"
 #include "mte_tools.h"
-#include "mat_mul_kernels.h"
+
 
 #endif //MTE_MTE_CORE_H

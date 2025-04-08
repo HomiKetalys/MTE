@@ -45,7 +45,7 @@
 #error "Unsupported compiler. Add support as needed"
 #endif
 
-#if defined(__ARM_ARCH_7EM__)
+#if defined(__ARM_ARCH_7EM__) && !defined(__CMSIS_GCC_H)
 __STATIC_FORCEINLINE int32_t __SXTB16_ROR8(int32_t op1)
 {
     int32_t result;
@@ -60,10 +60,18 @@ __STATIC_FORCEINLINE int32_t __SXTB16(int32_t op1)
     return result;
 }
 
+
 __STATIC_FORCEINLINE int32_t __SMMLAR(int32_t op1, int32_t op2, int32_t op3)
 {
     int32_t result;
     __ASM volatile("smmlar %0, %1, %2, %3" : "=r"(result) : "r"(op1), "r"(op2), "r"(op3));
+    return result;
+}
+
+__STATIC_FORCEINLINE int32_t __SMMLA(int32_t op1, int32_t op2, int32_t op3)
+{
+    int32_t result;
+    __ASM volatile("smmla %0, %1, %2, %3" : "=r"(result) : "r"(op1), "r"(op2), "r"(op3));
     return result;
 }
 
@@ -125,6 +133,13 @@ __STATIC_FORCEINLINE int32_t mte_read_q15x2_ia(const int16_t **in_q15)
     return (val);
 }
 
+__STATIC_FORCEINLINE int32_t mte_read_q15x2(const int16_t *in_q15)
+{
+    int32_t val;
+    memcpy(&val, in_q15, 4);
+    return (val);
+}
+
 __STATIC_FORCEINLINE int32_t mte_read_s8x4_ia(const int8_t **in_s8)
 {
     int32_t val;
@@ -132,6 +147,7 @@ __STATIC_FORCEINLINE int32_t mte_read_s8x4_ia(const int8_t **in_s8)
     *in_s8 += 4;
     return (val);
 }
+
 __STATIC_FORCEINLINE void i8x4_to_2xi16x2_offset_reordered_ele_ia(int32_t **src, int32_t **dst, int32_t offset_i16x2)
 {
     int32_t out_i16x2_1;
