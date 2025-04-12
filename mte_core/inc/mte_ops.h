@@ -28,7 +28,7 @@ void conv2d_1x1_s8(
     //kernel
     const int8_t *weight,
     int8_t *weight_cache,
-    int32_t *bias,
+    const int32_t *bias,
     int32_t *bias_cache,
     const int32_t *scale,
     int32_t *scale_cache,
@@ -76,6 +76,36 @@ void dw_conv2d_3x3_stride_1_1_dilate_1_1_s8(
 
 
 void dw_conv2d_3x3_stride_2_2_dilate_1_1_s8(
+    //input
+    const int8_t *input,
+    int32_t input_h,
+    int32_t input_w,
+    int32_t input_ch,
+    int32_t input_offset,
+    int32_t pad_h_low,
+    int32_t pad_h_high,
+    int32_t pad_w_low,
+    int32_t pad_w_high,
+    //kernel
+    const int8_t *weight,
+    int8_t *weight_cache,
+    const int32_t *bias,
+    int32_t *bias_cache,
+    const int32_t *scale,
+    int32_t *scale_cache,
+    int8_t *buffer,
+    //activation
+    int32_t act_min,
+    int32_t act_max,
+    //output
+    int8_t *output,
+    int32_t output_h,
+    int32_t output_w,
+    int32_t output_ch,
+    int32_t output_offset);
+
+
+void dw_conv2d_5x5_stride_1_1_dilate_1_1_s8(
     //input
     const int8_t *input,
     int32_t input_h,
@@ -162,5 +192,16 @@ void max_pool2d(
     int8_t *output,int32_t output_h, int32_t output_w);
 
 void pack(const int8_t  *input_addrs,int32_t channels,int32_t pack_nums,int32_t repeat_nums,int8_t *output);
+
+void transpose(
+    const int8_t *input, int32_t ele_nums,const int32_t *perm, const int32_t *input_shape,const int32_t *output_shape,int32_t dim_nums,
+    int32_t *idx_buffer,
+    int8_t *output);
+
+void mte_softmax(
+    const int8_t *input,int32_t nums0,int32_t n,int32_t nums1,
+    const float *map0,float *map0_cache,const float *map1,float *map1_cache,
+    int8_t *output,int32_t output_offset
+);
 
 #endif//MTE_OPS_H

@@ -1,8 +1,8 @@
-from pulp import COIN_CMD
-
-from ..op_parse.parse_tools import MteGraph,MteGraphFromTflite, BasicOp, MteTensor
+import os.path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from ..mte_base import MteGraph, BasicOp, MteTensor
+
 class InplaceMemBlock:
     align_size=4
     ins_nums=0
@@ -314,7 +314,7 @@ color_map={
     "activation":"blue",
 }
 
-def show_memory_distribution(mem_spaces:list[InplaceMemBlock],peak_mem,vis_name=None):
+def show_memory_distribution(mem_spaces:list[InplaceMemBlock],peak_mem,vis_name=None,vis_path=None):
     fig, ax = plt.subplots(figsize=(16, 12), dpi=500)
     rects=[]
     for mem_space in mem_spaces:
@@ -332,10 +332,11 @@ def show_memory_distribution(mem_spaces:list[InplaceMemBlock],peak_mem,vis_name=
     ax.set_ylim([0,peak_mem])
     ax.set_xlim([0,end])
     # plt.show()
-    if vis_name is not None:
-        plt.savefig(f'../temp/{vis_name}.png')
-    else:
-        plt.savefig('../temp/memory.png')
+    if vis_path is not None:
+        if vis_name is not None:
+            plt.savefig(os.path.join(vis_path,f'{vis_name}.png'))
+        else:
+            plt.savefig(os.path.join(vis_path,'memory.png'))
 
 
 def static_allocate_memory(mem_spaces):
@@ -408,7 +409,7 @@ def static_allocate_memory(mem_spaces):
         return None,None,None
 
 
-def allocate_tensor_memory(mte_graph:MteGraph,vis_name=None):
+def allocate_tensor_memory(mte_graph:MteGraph,vis_name=None,vis_path=None):
 
     mem_spaces=create_mem_spaces(mte_graph)
     mem_spaces.sort(key=lambda x:x.begin*100000-x.aligned_mem_size)
@@ -416,8 +417,8 @@ def allocate_tensor_memory(mte_graph:MteGraph,vis_name=None):
     mem_spaces,peak_mem=allocate_memory(mem_spaces,"recent_fit")
     # mem_spaces,allocated_tensor_mems,peak_mem=static_allocate_memory(mem_spaces)
     # mem_spaces[-1].aligned_mem_addr-=mem_spaces[-2].aligned_mem_addr
-    # mem_spaces[-2].aligned_mem_addr=0
-    show_memory_distribution(mem_spaces,peak_mem,vis_name)
+    # mem_spaces[-2].aligned_mem_addr=00
+    show_memory_distribution(mem_spaces,peak_mem,vis_name,vis_path)
     print(f" Peak Memory:{peak_mem/1024:.2f}KB")
     return peak_mem
 

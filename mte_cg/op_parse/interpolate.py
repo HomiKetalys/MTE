@@ -1,4 +1,4 @@
-from .parse_tools import OPERATOR, BasicOp, ModelReader, TFLiteReader
+from ..mte_base import OPERATOR, BasicOp, ModelReader, TFLiteReader
 
 
 def get_op_options(op_idx,model_reader:ModelReader):

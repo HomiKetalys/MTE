@@ -19,12 +19,14 @@ int main(void)
 {
     SCB_EnableICache();
     SCB_EnableDCache();
+    SCB->CACR |= (1 << 2);
     timer1_config();
     uart_init();
     uint32_t len = 0;
     set_mte_mem_addr(mem);
     int8_t *input_addr;
     float *output_addr;
+
     while (1) {
 //        len += uart_read_all(buffer + len);
 //        buffer[len] = '\0';
@@ -36,8 +38,8 @@ int main(void)
 //            }
 //            len = 0;
 //        }
-        input_addr=get_yolov10_input_addr();
-        output_addr=get_yolov10_output_addr();
+        input_addr=get_network_4_input_addr();
+        output_addr=get_network_4_output_addr();
         int32_t i,j;
         for(i=0;i<256;i++){
             for(j=0;j<256;j++){
@@ -47,7 +49,7 @@ int main(void)
             }
         }
         time0=timer_counter_read(TIMER1);
-        yolov10();
+        network_4();
         time1=timer_counter_read(TIMER1);
         time=time1-time0;
 

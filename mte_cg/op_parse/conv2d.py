@@ -1,7 +1,7 @@
 import numpy as np
 from toolz import isiterable
 
-from .parse_tools import OPERATOR, BasicOp, ModelReader, TFLiteReader, MteGraph, MteTensor
+from ..mte_base import OPERATOR, BasicOp, ModelReader, TFLiteReader, MteTensor
 
 
 def get_op_options(op_idx,model_reader:ModelReader):

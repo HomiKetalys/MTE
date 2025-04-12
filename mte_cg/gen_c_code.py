@@ -1,6 +1,6 @@
 import os
 
-from mte_cg.op_parse import MteGraph, MteTensor, BasicOp
+from .mte_base import MteGraph,MteTensor,BasicOp
 
 c_type_dict={
     "int32":"int32_t",

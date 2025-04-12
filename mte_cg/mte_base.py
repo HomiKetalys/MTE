@@ -1,11 +1,9 @@
 import numpy as np
 import tensorflow as tf
-from scipy.cluster.hierarchy import weighted
 from tensorflow.lite.tools.visualize import CreateDictFromFlatbuffer, BuiltinCodeToName
 from tensorflow.lite.tools.visualize import BuiltinCodeToName
-from torch.ao.quantization.utils import activation_dtype
 
-
+graph_optimizers=[]
 class MteGraph:
     def __init__(self,model_reader):
         self.model_reader = model_reader
@@ -15,6 +13,10 @@ class MteGraph:
         self.connected=False
         self.connect_table()
         self.add_extra_input_tensors()
+        sorted(graph_optimizers, key=lambda x:x[0])
+        for graph_optimizer in graph_optimizers:
+            graph_optimizer[1](self)
+        self.fix_inplace()
 
 
     def get_model_input_tensors(self):
@@ -24,7 +26,10 @@ class MteGraph:
         return [self.tensors_table[idx] for idx in self.model_reader.get_model_outputs_idx()]
 
     def get_op(self,op_idx):
-        return self.ops_table[op_idx]
+        if op_idx in self.ops_table.keys():
+            return self.ops_table[op_idx]
+        else:
+            return None
 
     def get_tensor(self,tensor_idx):
         return self.tensors_table[tensor_idx]
@@ -423,7 +428,7 @@ class MteTensor:
     # weight_filter=lambda x:x>=4*1024
     weight_filter=None
     extra_tensor_idx=10000
-    def __init__(self, tensor_idx, dtype, shape, tensor_type,data=None,scale=None,offset=None):
+    def __init__(self, tensor_idx, dtype, shape, tensor_type,data=None,scale=None,offset=None,in_ram=None):
         if tensor_idx is None:
             tensor_idx=MteTensor.extra_tensor_idx
             MteTensor.extra_tensor_idx+=1
@@ -437,7 +442,7 @@ class MteTensor:
         self.mem_addr=None
         self.offset=offset
         self.scale=scale
-        self.in_ram=None
+        self.in_ram=in_ram
 
     @property
     def data(self):
@@ -533,8 +538,10 @@ class opRegistry(object):
         if (not isinstance(op_name, str)) or op_name is None:
             op_name = op_func.__name__
 
-        if self._operator_dict.get(op_name, None):
-            raise KeyError(f'{op_name} is already registered in {self._name}')
+        op_func_=self._operator_dict.get(op_name, None)
+        if op_func_:
+            if op_func_!=op_func:
+                raise KeyError(f'{op_name} is already registered in {self._name}')
 
         self._operator_dict[op_name] = op_func
 
@@ -552,8 +559,4 @@ class opRegistry(object):
 
         return _register
 
-
-
-
-
-OPERATOR = opRegistry("TensorflowOP")
+OPERATOR = opRegistry("MteOP")

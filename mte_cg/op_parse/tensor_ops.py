@@ -1,7 +1,6 @@
 import numpy as np
 
-from . import TFLiteReader, MteTensor
-from .parse_tools import OPERATOR, BasicOp, ModelReader
+from ..mte_base import OPERATOR, BasicOp, ModelReader,TFLiteReader, MteTensor
 
 def get_concat_op_options(op_idx, model_reader:ModelReader):
     mte_options={
@@ -77,12 +76,38 @@ class Transpose(BasicOp):
 
     def op_post_process(self):
         self.input_tensors[1].in_ram=False
-        return []
+
+        input_shape_tensor=MteTensor(
+            tensor_idx=None,
+            dtype="int32",
+            shape=(len(self.input_tensors[0].shape),),
+            tensor_type="extra_weight",
+            data=np.array(self.input_tensors[0].shape, dtype="int32"),
+            in_ram=False,
+        )
+        output_shape_tensor=MteTensor(
+            tensor_idx=None,
+            dtype="int32",
+            shape=(len(self.output_tensors[0].shape),),
+            tensor_type="extra_weight",
+            data=np.array(self.output_tensors[0].shape, dtype="int32"),
+            in_ram=False,
+        )
+
+        output_idx_buffer=MteTensor(
+            tensor_idx=None,
+            dtype="int32",
+            shape=(len(self.output_tensors[0].shape),),
+            tensor_type="buffer",
+        )
+
+        return [input_shape_tensor,output_shape_tensor,output_idx_buffer]
 
     def get_call_func(self):
         func=(f"transpose("
-              f"{self.input_tensors[0].mem_symbol},{self.input_tensors[0].shape[1]},{self.input_tensors[0].shape[2]},{self.input_tensors[0].shape[3]},"
-              f""
+              f"{self.input_tensors[0].mem_symbol},{self.input_tensors[0].size},{self.input_tensors[1].var_symbol},{self.input_tensors[2].var_symbol},{self.input_tensors[3].var_symbol},{self.input_tensors[2].size},"
+              f"{self.input_tensors[4].mem_symbol},"
+              f"{self.output_tensors[0].mem_symbol}"
               f")")
         return func
 

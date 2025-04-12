@@ -34,7 +34,7 @@ if __name__ == '__main__':
     inp[:,:,1]=10
     inp[:,:,2]=80
     inp=inp[None,:,:,:]
-    model=tfOrtModelRuner(model_path="../temp/yolov10.tflite")
+    model=tfOrtModelRuner(model_path="../temp/yolo_fastestv2.tflite")
     oup=model(inp)
     print(oup)
 

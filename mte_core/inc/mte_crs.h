@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 #if defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
 #ifndef __ASM

@@ -1,4 +1,4 @@
-from .parse_tools import OPERATOR, BasicOp, ModelReader, TFLiteReader
+from ..mte_base import OPERATOR, BasicOp, ModelReader, TFLiteReader
 
 
 def get_max_pool2d_op_options(op_idx, model_reader:ModelReader):
@@ -14,6 +14,9 @@ def get_max_pool2d_op_options(op_idx, model_reader:ModelReader):
         if options["padding"]==0:
             mte_options["padding"]=((options["filter_height"]//2,(options["filter_height"]-1)//2),
                                     (options["filter_width"]//2,(options["filter_width"]-1)//2))
+        elif options["padding"]==1:
+            mte_options["padding"]=((0,0),
+                                    (0,0))
         else:
             raise NotImplementedError
     else:

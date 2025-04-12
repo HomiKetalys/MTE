@@ -1,8 +1,12 @@
+import copy
+
 import numpy as np
 
-from ..op_parse import Pad, Conv2d, Reshape, Transpose, MteTensor, Identity
-from ..op_parse.parse_tools import MteGraph
+from ..op_parse import Reshape, Transpose, MteTensor, Identity
+from ..mte_base import MteGraph
+from .utils import register_graph_optimizer
 
+@register_graph_optimizer(3)
 def optimize_reshape(mte_graph:MteGraph):
     for op_idx in mte_graph.run_seq:
         mte_op=mte_graph.get_op(op_idx)
@@ -15,10 +19,13 @@ def optimize_reshape(mte_graph:MteGraph):
 #     input_shape=op.input_tensors[0].shape
 
 
-
+@register_graph_optimizer(0)
 def remove_redundant_ops(mte_graph:MteGraph):
-    for run_idx in mte_graph.run_seq:
+    run_seq=copy.deepcopy(mte_graph.run_seq)
+    for run_idx in run_seq:
         mte_op=mte_graph.get_op(run_idx)
+        if mte_op is None:
+            continue
         if isinstance(mte_op,Transpose):
             mte_op:Transpose=mte_op
             output_tensor:MteTensor=mte_op.output_tensors[0]
@@ -45,4 +52,3 @@ def remove_redundant_ops(mte_graph:MteGraph):
                                 mte_graph.replace_op(next_op,Identity())
                                 mte_graph.remove_op_input_tensor(nnext_op,nnext_op.input_tensors[1])
                                 mte_graph.replace_op(nnext_op,Identity())
-                                break

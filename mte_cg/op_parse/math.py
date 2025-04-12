@@ -1,7 +1,5 @@
 import numpy as np
-
-from . import MteTensor
-from .parse_tools import OPERATOR,BasicOp,ModelReader
+from ..mte_base import OPERATOR, BasicOp, ModelReader,MteTensor
 
 
 @OPERATOR.register_operator("LOGISTIC")
@@ -26,6 +24,9 @@ def quantize_parse_func(op_idx, model_reader:ModelReader):
 def quantize_parse_func(op_idx, model_reader:ModelReader):
     op = DeQuantize(op_idx)
     return op
+
+
+
 
 @OPERATOR.register_operator("SOFTMAX")
 def softmax_parse_func(op_idx, model_reader:ModelReader):
@@ -78,7 +79,6 @@ class Sub(BasicOp):
     _inplace=False
     def __init__(self, op_idx):
         super().__init__(op_idx)
-        self.op_idx = op_idx
 
 class Mul(BasicOp):
     _inplace=False
@@ -86,11 +86,54 @@ class Mul(BasicOp):
         super().__init__(op_idx)
         self.op_idx = op_idx
 
+
+
 class Softmax(BasicOp):
     _inplace=False
-    def __init__(self, op_idx):
+    def __init__(self, op_idx=None):
         super().__init__(op_idx)
-        self.op_idx = op_idx
+
+    def op_post_process(self):
+        input_tensor=self.input_tensors[0]
+        output_vars0=[]
+        for i in range(0,256):
+            input_var=np.array(i).astype("int8")
+            input_var=input_var.astype("int32")
+            input_var_fp=input_tensor.scale*(input_var-input_tensor.offset)
+            input_var_fp_exp=np.exp(input_var_fp-input_tensor.scale*(127-input_tensor.offset))
+            output_vars0.append(input_var_fp_exp)
+        output_vars1=[]
+        for var in output_vars0:
+            output_vars1.append(var/self.output_tensors[0].scale)
+        map0_tensor=MteTensor(
+            tensor_idx=None,
+            dtype="float32",
+            shape=(256,),
+            tensor_type="extra_weight",
+            data=np.array(output_vars0,dtype="float32"),
+        )
+        map1_tensor=MteTensor(
+            tensor_idx=None,
+            dtype="float32",
+            shape=(256,),
+            tensor_type="extra_weight",
+            data=np.array(output_vars1,dtype="float32"),
+        )
+        return [map0_tensor,map1_tensor]
+
+    def get_call_func(self):
+        nums0=self.input_tensors[0].size//self.input_tensors[0].shape[-1]
+        n=self.input_tensors[0].shape[-1]
+        func=(f"mte_softmax("
+              f"{self.input_tensors[0].mem_symbol},{nums0},{n},1,"
+              f"{self.input_tensors[1].var_symbol},{self.input_tensors[1].mem_symbol},"
+              f"{self.input_tensors[2].var_symbol},{self.input_tensors[2].mem_symbol},"
+              f"{self.output_tensors[0].mem_symbol},{int(self.output_tensors[0].offset)}"
+              f")")
+        return func
+
+
+
 
 def get_pre_weight_tensor(input_tensor,output_tensor,kernel_func):
     output_vars=[]
@@ -201,7 +244,6 @@ class Identity(BasicOp):
     _inplace=True
     def __init__(self, op_idx):
         super().__init__(op_idx)
-        self.op_idx = op_idx
         self.ins_inplace=True
 
     def get_call_func(self):
