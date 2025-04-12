@@ -13,7 +13,7 @@ class MteGraph:
         self.connected=False
         self.connect_table()
         self.add_extra_input_tensors()
-        sorted(graph_optimizers, key=lambda x:x[0])
+        graph_optimizers.sort(key=lambda x:x[0])
         for graph_optimizer in graph_optimizers:
             graph_optimizer[1](self)
         self.fix_inplace()

@@ -26,6 +26,8 @@ def gen_codes_from_model(model_path,model_name,codes_path,work_path):
 def gen_codes_from_models(model_paths,codes_path,work_path,model_names=None,workers=8):
     if isinstance(model_paths,str):
         model_paths=[model_paths]
+    if isinstance(model_names,str):
+        model_names=[model_names]
     if model_names is not None:
         assert len(model_paths)==len(model_names)
     model_infos=[]
