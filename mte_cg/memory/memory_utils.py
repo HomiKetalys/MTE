@@ -414,7 +414,7 @@ def allocate_tensor_memory(mte_graph:MteGraph,vis_name=None,vis_path=None):
     mem_spaces=create_mem_spaces(mte_graph)
     mem_spaces.sort(key=lambda x:x.begin*100000-x.aligned_mem_size)
 
-    mem_spaces,peak_mem=allocate_memory(mem_spaces,"recent_fit")
+    mem_spaces,peak_mem=allocate_memory(mem_spaces,"first_fit")
     # mem_spaces,allocated_tensor_mems,peak_mem=static_allocate_memory(mem_spaces)
     # mem_spaces[-1].aligned_mem_addr-=mem_spaces[-2].aligned_mem_addr
     # mem_spaces[-2].aligned_mem_addr=00

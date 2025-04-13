@@ -49,7 +49,8 @@ if __name__ == '__main__':
     ]
     gen_codes_from_models(model_paths,"./temp/c_codes","./temp",model_names=model_names)
 ```
-随后程序将会在指定位置生成代码以及中间文件。
+随后程序将会在指定位置生成代码以及中间文件， 如yolov10t模型的内存分配图示。
+<img src="assets/yolov10t_mem.png" width="800" height="600" alt="yolov10t_mem">
 
 ## 编译
 
