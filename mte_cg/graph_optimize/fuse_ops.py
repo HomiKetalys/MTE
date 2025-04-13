@@ -1,7 +1,7 @@
 import copy
 
-from ..mte_base import MteGraph
-from ..op_parse import Transpose,Pad,BasicOp,Identity
+from ..base import MteGraph
+from ..op_parse import Transpose,Pad,MteOp,Identity
 
 from .utils import register_graph_optimizer
 
@@ -29,7 +29,7 @@ def fuse_zero_pad(mte_graph:MteGraph):
                             mte_graph.replace_op_input_tensor(to_op,output_tensor,input_tensor)
 
 
-def remove_continued_transpose(mte_op:BasicOp,perm0,mte_graph:MteGraph):
+def remove_continued_transpose(mte_op:MteOp, perm0, mte_graph:MteGraph):
     assert isinstance(mte_op,Transpose)
     to_ops=mte_op.output_tensors[0].to_ops
     if len(to_ops)>1:

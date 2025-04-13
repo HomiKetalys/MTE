@@ -1,6 +1,7 @@
 import os
+import shutil
 
-from .mte_base import MteGraph,MteTensor,BasicOp
+from .base import MteGraph,MteTensor,MteOp
 
 c_type_dict={
     "int32":"int32_t",
@@ -16,7 +17,7 @@ def gen_model_call(model_name,mte_graph:MteGraph,file_path):
     func+=f"#include \"{model_name}_params.h\"\n"
     func+=f"void {model_name}(){{\n"
     for run_idx in mte_graph.run_seq:
-        mte_op:BasicOp=mte_graph.get_op(run_idx)
+        mte_op:MteOp=mte_graph.get_op(run_idx)
         func+=f"    /*op idx:{mte_op.op_idx},op_name:{mte_op.__class__.__name__}*/\n"
         func+="    "+mte_op.get_call_func()
         func+=";\n"
@@ -73,3 +74,20 @@ def gen_models_c_file(model_infos,file_path):
             f0.write((f"{c_type_dict[output_tensor.dtype]} *get_{model_name}_output_addr(){{\n"
                       f"    return {output_tensor.mem_symbol};\n"
                       f"}}\n"))
+
+def gen_ops_c_file(model_infos,file_path):
+    c_file_paths=set()
+    for mte_graph,model_name,peak_mem in model_infos:
+        mte_graph:MteGraph=mte_graph
+        for run_idx in mte_graph.run_seq:
+            mte_op:MteOp=mte_graph.get_op(run_idx)
+            paths=mte_op.get_c_file_paths()
+            for path in paths:
+                c_file_paths.add(os.path.abspath(path))
+    with open(os.path.join(file_path,f"mte_custom_ops.h"),"w") as f0:
+        for c_file_path in c_file_paths:
+            if c_file_path.endswith(".h"):
+                header_name=os.path.split(c_file_path)[1]
+                f0.write(f"#include \"{header_name}\"\n")
+    for c_file_path in c_file_paths:
+        shutil.copy(c_file_path,file_path)

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.29)
 
+set(MODEL_PATH "../../../../temp/c_codes")
+set(MTE_CORE_PATH "../../../../mte_core")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_COMPILER_FORCED TRUE)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -21,8 +24,8 @@ endif()
 
 add_definitions(-DGD32H7XX)
 include_directories(
-        ../../../../mte_core/inc
-        ../../../../temp/c_codes
+        ${MTE_CORE_PATH}/inc
+        ${MODEL_PATH}
         ../../../CMSIS_5/CMSIS/Core/Include
         lib/inc
         lib
@@ -30,10 +33,10 @@ include_directories(
 file(GLOB_RECURSE DEV_SOURCES "lib/*.c" "lib/*.h")
 message("${DEV_SOURCES}")
 
-file(GLOB_RECURSE MTE_SOURCES "../../../../mte_core/src/*.c" "../../../../mte_core/inc/*.h")
+file(GLOB_RECURSE MTE_SOURCES "${MTE_CORE_PATH}/src/*.c" "${MTE_CORE_PATH}/inc/*.h")
 message("${MTE_SOURCES}")
 
-file(GLOB_RECURSE MODEL_SOURCES "../../../../temp/c_codes/*.c" "../../../../temp/c_codes/*.h")
+file(GLOB_RECURSE MODEL_SOURCES "${MODEL_PATH}/*.c" "${MODEL_PATH}/*.h")
 message("${MODEL_SOURCES}")
 
 foreach(file ${MTE_SOURCES})
@@ -41,12 +44,12 @@ foreach(file ${MTE_SOURCES})
 endforeach()
 
 set(CMAKE_C_FLAGS "-gdwarf-2 -mcpu=cortex-m7 -mthumb -mthumb-interwork -fdata-sections -ffunction-sections -mfloat-abi=hard -mfpu=fpv5-d16")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -Wl,-Map=memory.map -T${CMAKE_SOURCE_DIR}/gd32h7xx_flash.ld")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -Wl,-Map=memory.map -T${CMAKE_SOURCE_DIR}/flash.ld")
 
 project(cortex-m7 C ASM)
 add_executable(cortex-m7
         ../../../main.c
-        startup_gd32h7xx.S
+        startup.S
         ${DEV_SOURCES}
         ${MTE_SOURCES}
         ${MODEL_SOURCES}

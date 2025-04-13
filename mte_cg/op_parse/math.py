@@ -1,5 +1,5 @@
 import numpy as np
-from ..mte_base import OPERATOR, BasicOp, ModelReader,MteTensor
+from ..base import OPERATOR, MteOp, ModelReader,MteTensor
 
 
 @OPERATOR.register_operator("LOGISTIC")
@@ -25,9 +25,6 @@ def quantize_parse_func(op_idx, model_reader:ModelReader):
     op = DeQuantize(op_idx)
     return op
 
-
-
-
 @OPERATOR.register_operator("SOFTMAX")
 def softmax_parse_func(op_idx, model_reader:ModelReader):
     op = Softmax(op_idx)
@@ -49,7 +46,7 @@ def mul_parse_func(op_idx, model_reader:ModelReader):
     op = Mul(op_idx)
     return op
 
-class Add(BasicOp):
+class Add(MteOp):
     _inplace=False
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -75,12 +72,12 @@ class Add(BasicOp):
               f")")
         return func
 
-class Sub(BasicOp):
+class Sub(MteOp):
     _inplace=False
     def __init__(self, op_idx):
         super().__init__(op_idx)
 
-class Mul(BasicOp):
+class Mul(MteOp):
     _inplace=False
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -88,7 +85,7 @@ class Mul(BasicOp):
 
 
 
-class Softmax(BasicOp):
+class Softmax(MteOp):
     _inplace=False
     def __init__(self, op_idx=None):
         super().__init__(op_idx)
@@ -156,7 +153,7 @@ def get_pre_weight_tensor(input_tensor,output_tensor,kernel_func):
     )
     return tensor
 
-class Tanh(BasicOp):
+class Tanh(MteOp):
     _inplace=True
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -174,7 +171,7 @@ class Tanh(BasicOp):
                 f"{self.output_tensors[0].mem_symbol}"
                 f")")
 
-class Quantize(BasicOp):
+class Quantize(MteOp):
     _inplace=True
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -192,7 +189,7 @@ class Quantize(BasicOp):
                 f"{self.output_tensors[0].mem_symbol}"
                 f")")
 
-class DeQuantize(BasicOp):
+class DeQuantize(MteOp):
     _inplace=False
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -223,7 +220,7 @@ class DeQuantize(BasicOp):
                 f"{self.output_tensors[0].mem_symbol}"
                 f")")
 
-class Sigmoid(BasicOp):
+class Sigmoid(MteOp):
     _inplace=True
     def __init__(self, op_idx):
         super().__init__(op_idx)
@@ -240,7 +237,7 @@ class Sigmoid(BasicOp):
                 f"{self.output_tensors[0].mem_symbol}"
                 f")")
 
-class Identity(BasicOp):
+class Identity(MteOp):
     _inplace=True
     def __init__(self, op_idx):
         super().__init__(op_idx)

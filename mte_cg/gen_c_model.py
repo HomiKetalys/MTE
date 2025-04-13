@@ -1,8 +1,8 @@
 import os
 
-from .gen_c_code import gen_model_call, gen_models_header_file, gen_models_c_file
+from .gen_c_code import gen_model_call, gen_models_header_file, gen_models_c_file, gen_ops_c_file
 from .memory import allocate_tensor_memory
-from .mte_base import MteGraphFromTflite
+from .base import MteGraphFromTflite
 
 
 def model_parse(model_path):
@@ -31,7 +31,8 @@ def gen_codes_from_models(model_paths,codes_path,work_path,model_names=None,work
     if model_names is not None:
         assert len(model_paths)==len(model_names)
     model_infos=[]
-
+    os.makedirs(codes_path, exist_ok=True)
+    os.makedirs(work_path, exist_ok=True)
     # process = multiprocessing.Pool()
     # results=[]
     # for i in range(0, 3):
@@ -47,13 +48,14 @@ def gen_codes_from_models(model_paths,codes_path,work_path,model_names=None,work
         model_infos.append(model_info)
     gen_models_header_file(model_infos,codes_path)
     gen_models_c_file(model_infos,codes_path)
+    gen_ops_c_file(model_infos,codes_path)
 
 
 
 
 if __name__ == '__main__':
     model_paths=[
-        "../temp/yolov10.tflite",
+        "../temp/yolov10t.tflite",
         "../temp/model_front.tflite",
         "../temp/model_post.tflite",
         "../temp/yolo_fastestv2.tflite",

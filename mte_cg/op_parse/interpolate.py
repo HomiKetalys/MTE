@@ -1,4 +1,4 @@
-from ..mte_base import OPERATOR, BasicOp, ModelReader, TFLiteReader
+from ..base import OPERATOR, MteOp, ModelReader, TFLiteReader
 
 
 def get_op_options(op_idx,model_reader:ModelReader):
@@ -20,7 +20,7 @@ def resize_nearest_parse_func(op_idx, model_reader:ModelReader):
     op = Interpolate(op_idx,mode=options["mode"])
     return op
 
-class Interpolate(BasicOp):
+class Interpolate(MteOp):
     _inplace=False
     def __init__(self, op_idx,mode):
         super().__init__(op_idx)

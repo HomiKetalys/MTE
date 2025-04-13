@@ -1,10 +1,10 @@
 import numpy as np
 from toolz import isiterable
 
-from ..mte_base import OPERATOR, BasicOp, ModelReader, TFLiteReader, MteTensor
+from ..base import OPERATOR, MteOp, ModelReader, TFLiteReader, MteTensor
 
 
-def get_op_options(op_idx,model_reader:ModelReader):
+def get_conv2d_op_options(op_idx, model_reader:ModelReader):
     mte_options={
         "stride":None,
         "dilation":None,
@@ -41,7 +41,7 @@ def get_op_options(op_idx,model_reader:ModelReader):
 def conv2d_parse_func(op_idx, model_reader:ModelReader):
     input_tensor_idxes = model_reader.get_inputs_idx(op_idx)
     out_channels,kernel_h,kernel_w,in_channels=model_reader.get_tensor_shape(input_tensor_idxes[1])
-    options=get_op_options(op_idx,model_reader)
+    options=get_conv2d_op_options(op_idx, model_reader)
     stride = options['stride']
     dilation = options['dilation']
     act = options['act']
@@ -77,7 +77,7 @@ implemented_dwconv_configs=[
     [-1,-1,((3,3),(5,5),(7,7)),-1,((1,1),),-1],
 ]
 
-class Conv2d(BasicOp):
+class Conv2d(MteOp):
     _inplace=True
     def __init__(self, op_idx, in_channels, out_channels,kernel_size=(1, 1), stride=(1, 1), padding=((0,0),(0,0)), dilate=(1, 1), group=1, activation=None):
         super().__init__(op_idx)
@@ -114,7 +114,6 @@ class Conv2d(BasicOp):
                         spare_size=(h_begin*input_w)*input_ch
                     else:
                         spare_size=(h_begin*input_w+w_begin+1)*input_ch
-
                     output_size=(h*output_w+w+1)*output_ch
                     inplace_offset=min(inplace_offset,spare_size-output_size)
             inplace_offset=inplace_offset

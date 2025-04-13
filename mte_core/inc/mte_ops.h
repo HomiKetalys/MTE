@@ -6,6 +6,7 @@
 #define MTE_OPS_H
 
 #include "mte_core.h"
+#include "mte_custom_ops.h"
 
 void conv2d_input_3_3x3_stride_2_2_dilate_1_1_s8(
     const int8_t *input, int32_t input_h, int32_t input_w,int32_t input_ch,int32_t input_offset,

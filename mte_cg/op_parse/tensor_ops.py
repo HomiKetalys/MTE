@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..mte_base import OPERATOR, BasicOp, ModelReader,TFLiteReader, MteTensor
+from ..base import OPERATOR, MteOp, ModelReader,TFLiteReader, MteTensor
 
 def get_concat_op_options(op_idx, model_reader:ModelReader):
     mte_options={
@@ -69,7 +69,7 @@ def pad_parse_func(op_idx, model_reader:ModelReader):
     op = Transpose(op_idx)
     return op
 
-class Transpose(BasicOp):
+class Transpose(MteOp):
     _inplace=False
     def __init__(self, op_idx=None):
         super().__init__(op_idx)
@@ -111,7 +111,7 @@ class Transpose(BasicOp):
               f")")
         return func
 
-class Concat(BasicOp):
+class Concat(MteOp):
     _inplace=False
     def __init__(self, op_idx=None,dim=None):
         super().__init__(op_idx)
@@ -165,7 +165,7 @@ class Concat(BasicOp):
               f")")
         return func
 
-class Pack(BasicOp):
+class Pack(MteOp):
     _inplace=False
     def __init__(self, op_idx=None,dim=0,repeat_nums=1):
         super().__init__(op_idx)
@@ -188,7 +188,7 @@ class Pack(BasicOp):
               f")")
         return func
 
-class Gather(BasicOp):
+class Gather(MteOp):
     _inplace=False
     def __init__(self, op_idx=None,dim=None):
         super().__init__(op_idx)
@@ -217,7 +217,7 @@ class Gather(BasicOp):
               f")")
         return func
 
-class Reshape(BasicOp):
+class Reshape(MteOp):
     _inplace=True
     def __init__(self, op_idx=None):
         super().__init__(op_idx)
@@ -227,7 +227,7 @@ class Reshape(BasicOp):
         func="/*reshape op:reshape operator do not change data layout*/"
         return func
 
-class Identity(BasicOp):
+class Identity(MteOp):
     _inplace=True
     def __init__(self, op_idx=None):
         super().__init__(op_idx)

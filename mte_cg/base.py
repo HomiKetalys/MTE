@@ -8,7 +8,7 @@ class MteGraph:
     def __init__(self,model_reader):
         self.model_reader = model_reader
         self.tensors_table:dict[int:MteTensor]=self.gen_tensor_table()
-        self.ops_table:dict[int:BasicOp]=self.gen_op_table()
+        self.ops_table: dict[int:MteOp]=self.gen_op_table()
         self.run_seq=model_reader.run_seq
         self.connected=False
         self.connect_table()
@@ -32,7 +32,10 @@ class MteGraph:
             return None
 
     def get_tensor(self,tensor_idx):
-        return self.tensors_table[tensor_idx]
+        if tensor_idx in self.tensors_table.keys():
+            return self.tensors_table[tensor_idx]
+        else:
+            return None
 
     def get_tensor_idxes(self):
         return self.tensors_table.keys()
@@ -118,7 +121,7 @@ class MteGraph:
 
     def fix_inplace(self):
         for run_idx in self.run_seq:
-            mte_op:BasicOp=self.ops_table[run_idx]
+            mte_op:MteOp=self.ops_table[run_idx]
             input_tensor:MteTensor=mte_op.input_tensors[0]
             for to_op in input_tensor.to_ops:
                 if to_op.op_idx !=mte_op.op_idx:
@@ -285,15 +288,13 @@ class MteGraphFromTflite(MteGraph):
         super().__init__(TFLiteReader(tflite_path))
 
 
-class BasicOp:
+class MteOp:
     _inplace=True
-    _input_cache=False
-    _weight_cache=False
     _extra_op_id=10000
     def __init__(self,op_idx):
         if op_idx is None:
-            op_idx=BasicOp._extra_op_id
-            BasicOp._extra_op_id+=1
+            op_idx=MteOp._extra_op_id
+            MteOp._extra_op_id+=1
         self.op_idx=op_idx
         self.ins_inplace=False
         self.input_tensors:list[MteTensor]=[]
@@ -305,7 +306,7 @@ class BasicOp:
 
     @property
     def inplace(self):
-        return BasicOp._inplace and self._inplace and self.ins_inplace
+        return MteOp._inplace and self._inplace and self.ins_inplace
 
     def remove_input_tensor(self,tensor):
         is_in_tensors=False
@@ -366,61 +367,9 @@ class BasicOp:
 
     def get_call_func(self):
         raise NotImplementedError
-
-
-
-class inplaceInfo(object):
-    def __init__(self, sub_inplace=False, address_offset=None, input_bytes=None, input_block_bytes=None, output_bytes=None, output_block_bytes=None, stride_bytes=None):
-        self.sub_inplace=sub_inplace
-        self._address_offset=address_offset
-        if self._address_offset is None:
-            assert input_bytes is not None
-            assert output_bytes is not None
-            assert input_block_bytes is not None
-            assert output_block_bytes is not None
-            assert stride_bytes is not None
-            self.input_bytes=input_bytes
-            self.output_bytes=output_bytes
-            self.input_block_bytes=input_block_bytes
-            self.output_block_bytes=output_block_bytes
-            self.stride_bytes=stride_bytes
-            self._address_offset=self.get_address_offset()
-
-    @property
-    def address_offset(self):
-        return self._address_offset
-
-    def get_address_offset(self):
-        if self.stride_bytes==self.input_bytes:
-            if self.sub_inplace:
-                if self.output_block_bytes>=self.input_block_bytes:
-                    return self.input_bytes-self.output_bytes
-                else:
-                    return self.input_block_bytes-self.output_block_bytes
-            else:
-                if self.output_block_bytes>=self.input_block_bytes:
-                    return self.input_bytes-self.input_block_bytes-self.output_bytes
-                else:
-                    return -self.output_block_bytes
-        else:
-            if self.sub_inplace:
-                if self.output_block_bytes>=self.stride_bytes:
-                    if self.input_bytes-self.output_block_bytes<=self.input_bytes-self.stride_bytes:
-                        return self.input_bytes-self.output_bytes
-                    else:
-                        return self.input_bytes-self.stride_bytes+self.output_block_bytes-self.output_bytes
-                else:
-                    return self.stride_bytes-self.output_block_bytes
-            else:
-                if self.output_block_bytes>=self.stride_bytes:
-                    return self.input_bytes-self.input_block_bytes-self.output_bytes
-                else:
-                    return -self.output_block_bytes
-
-
-
-
-
+    
+    def get_c_file_paths(self):
+        return []
 
 
 class MteTensor:
@@ -436,8 +385,8 @@ class MteTensor:
         self.dtype=dtype
         self.shape=shape
         self.tensor_type=tensor_type
-        self.to_ops:list[BasicOp]=[]
-        self.from_ops:list[BasicOp]=[]
+        self.to_ops:list[MteOp]=[]
+        self.from_ops:list[MteOp]=[]
         self.data_=data
         self.mem_addr=None
         self.offset=offset
@@ -503,17 +452,8 @@ class MteTensor:
 
     @property
     def mem_symbol(self):
-        if self.used_in_ram:
-            return f"&mte_mem[{self.mem_addr}]"
-        else:
-            return "0"
-
-
-
-
-
-
-
+        assert self.used_in_ram
+        return f"&mte_mem[{self.mem_addr}]"
 
 class opRegistry(object):
     def __init__(self, name) -> None:

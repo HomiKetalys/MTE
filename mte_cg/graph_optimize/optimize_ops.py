@@ -3,7 +3,7 @@ import copy
 import numpy as np
 
 from ..op_parse import Reshape, Transpose, MteTensor, Identity
-from ..mte_base import MteGraph
+from ..base import MteGraph
 from .utils import register_graph_optimizer
 
 @register_graph_optimizer(3)

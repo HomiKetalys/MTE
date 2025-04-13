@@ -4,7 +4,7 @@
 
 #include "uart.h"
 
-void uart_init()
+void mte_usart_init()
 {
     usart_config();
 }
@@ -60,7 +60,7 @@ void USART0_IRQHandler()
     }
 }
 
-void uart_read(uint8_t* dst,uint32_t byte_size)
+void mte_uart_read(uint8_t* dst,uint32_t byte_size)
 {
     uint32_t rev_size=0;
     while(rev_size<byte_size)
@@ -75,7 +75,7 @@ void uart_read(uint8_t* dst,uint32_t byte_size)
     }
 }
 
-uint32_t uart_read_all(uint8_t* dst)
+uint32_t mte_uart_read_all(uint8_t* dst)
 {
     uint32_t rev_size=0;
     while(1)
@@ -96,7 +96,7 @@ uint32_t uart_read_all(uint8_t* dst)
     return rev_size;
 }
 
-void uart_write(uint8_t* src,uint32_t byte_size)
+void mte_uart_write(uint8_t* src,uint32_t byte_size)
 {
     uint32_t trans_size;
     for (trans_size = 0; trans_size < byte_size; trans_size++)

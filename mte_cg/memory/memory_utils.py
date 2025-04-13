@@ -1,7 +1,7 @@
 import os.path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from ..mte_base import MteGraph, BasicOp, MteTensor
+from ..base import MteGraph, MteOp, MteTensor
 
 class InplaceMemBlock:
     align_size=4
@@ -266,7 +266,7 @@ class MemSlots:
 def create_mem_spaces(mte_graph:MteGraph):
     mem_spaces:list[InplaceMemBlock]=[]
     for run_id,op_idx in enumerate(mte_graph.run_seq):
-        mte_op:BasicOp=mte_graph.get_op(op_idx)
+        mte_op:MteOp=mte_graph.get_op(op_idx)
         input_tensors=mte_op.input_tensors
         for input_tensor in input_tensors:
             input_idx=input_tensor.tensor_idx
