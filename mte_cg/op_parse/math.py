@@ -47,10 +47,19 @@ def mul_parse_func(op_idx, model_reader:ModelReader):
     return op
 
 class Add(MteOp):
-    _inplace=False
-    def __init__(self, op_idx):
+    _inplace=True
+    def __init__(self, op_idx=None):
         super().__init__(op_idx)
-        self.op_idx = op_idx
+        self.ins_inplace=True
+
+    @property
+    def inplace_tensor_idx(self):
+        lowest_tensor=self.input_tensors[0]
+        for input_tensor in self.input_tensors[1:]:
+            if input_tensor.from_ops[0].op_idx>lowest_tensor.from_ops[0].op_idx:
+                lowest_tensor=input_tensor
+        return lowest_tensor.tensor_idx
+
 
     def get_call_func(self):
         input_tensor0=self.input_tensors[0]
@@ -78,17 +87,34 @@ class Sub(MteOp):
         super().__init__(op_idx)
 
 class Mul(MteOp):
-    _inplace=False
-    def __init__(self, op_idx):
+    _inplace=True
+    def __init__(self, op_idx=None):
         super().__init__(op_idx)
-        self.op_idx = op_idx
+        self.ins_inplace=True
+
+    def get_call_func(self):
+        input_tensor0=self.input_tensors[0]
+        input_tensor1=self.input_tensors[1]
+        output_tensor=self.output_tensors[0]
+        scale=input_tensor0.scale*input_tensor1.scale/output_tensor.scale
+        offset=int(output_tensor.offset)
+        scale=int(np.round(scale*2**32).astype("int64"))
+        assert scale<2**31
+        func=(f"mul("
+              f"{input_tensor0.mem_symbol},{int(input_tensor0.offset)},"
+              f"{input_tensor1.mem_symbol},{int(input_tensor1.offset)},"
+              f"{input_tensor0.size},"
+              f"{output_tensor.mem_symbol},{scale},{offset}"
+              f")")
+        return func
 
 
 
 class Softmax(MteOp):
-    _inplace=False
+    _inplace=True
     def __init__(self, op_idx=None):
         super().__init__(op_idx)
+        self.ins_inplace=True
 
     def op_post_process(self):
         input_tensor=self.input_tensors[0]

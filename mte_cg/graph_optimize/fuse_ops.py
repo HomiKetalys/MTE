@@ -8,8 +8,8 @@ from .utils import register_graph_optimizer
 @register_graph_optimizer(2)
 def fuse_zero_pad(mte_graph:MteGraph):
     run_seq=copy.deepcopy(mte_graph.run_seq)
-    for run_idx in run_seq:
-        mte_op=mte_graph.get_op(run_idx)
+    for op_idx in run_seq:
+        mte_op=mte_graph.get_op(op_idx)
         if mte_op is None:
             continue
         if isinstance(mte_op,Pad):
@@ -59,8 +59,8 @@ def remove_continued_transpose(mte_op:MteOp, perm0, mte_graph:MteGraph):
 @register_graph_optimizer(1)
 def fuse_transpose(mte_graph:MteGraph):
     run_seq=copy.deepcopy(mte_graph.run_seq)
-    for run_idx in run_seq:
-        mte_op=mte_graph.get_op(run_idx)
+    for op_idx in run_seq:
+        mte_op=mte_graph.get_op(op_idx)
         if mte_op is None:
             continue
         if isinstance(mte_op,Transpose):

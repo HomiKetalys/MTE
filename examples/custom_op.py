@@ -79,7 +79,7 @@ def get_avg_pool2d_op_options(op_idx, model_reader:ModelReader):
         raise NotImplementedError
     return mte_options
 
-@OPERATOR.register_operator("AVERAGE_POOL_2d")
+@OPERATOR.register_operator("AVERAGE_POOL_2D")
 def avg_pool2d_parse_func(op_idx,model_reader:ModelReader):
     mte_options=get_avg_pool2d_op_options(op_idx,model_reader)
     op=AvgPool2d(op_idx,mte_options["kernel_size"],mte_options["stride"],mte_options["padding"])
@@ -109,4 +109,6 @@ class AvgPool2d(MteOp):
             os.path.join(now_file_dir,"./custom_op_c_files/avg_pool2d.h"),
         ]
         return c_file_paths
+
+
 

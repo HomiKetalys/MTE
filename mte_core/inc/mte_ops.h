@@ -205,4 +205,15 @@ void mte_softmax(
     int8_t *output,int32_t output_offset
 );
 
+void resize_nearest(
+    const int8_t *input,int32_t input_ch,int32_t input_h,int32_t input_w,
+    int8_t *output,int32_t output_h,int32_t output_w
+);
+
+void mul(
+    const int8_t *input0,int32_t input0_offset,int8_t *input1,int32_t input1_offset,
+    int32_t ele_nums,
+    int8_t *output,int32_t scale,int32_t output_offset
+);
+
 #endif//MTE_OPS_H

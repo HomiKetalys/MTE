@@ -1,6 +1,8 @@
 import os.path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from pywt.version import release
+
 from ..base import MteGraph, MteOp, MteTensor
 
 class InplaceMemBlock:
@@ -21,6 +23,7 @@ class InplaceMemBlock:
         self.tensor_begin=[begin]
         self.tensor_end=[begin+1]
         self.patial_released=False
+        self.un_released_addr=None
 
     def set_aligned_mem_addr(self, aligned_addr):
         self.aligned_mem_addr=aligned_addr
@@ -79,9 +82,46 @@ class InplaceMemBlock:
         self.tensor_end[-1]=end
         self.end=end
 
+    def get_release_addr(self,recycle_time):
+        if self.un_released_addr is None:
+            self.un_released_addr=[self.aligned_mem_addr,self.aligned_mem_addr+self.aligned_mem_size]
+        start=False
+        low=None
+        high=None
+        for begin,end,tensor,rel_addr in zip(self.tensor_begin,self.tensor_end,self.tensors,self.rel_aligned_addr):
+            if end>recycle_time and not start:
+                start=True
+                low=self.aligned_mem_addr+self.aligned_mem_size+rel_addr
+                high=self.aligned_mem_addr+self.aligned_mem_size+rel_addr+self.align(tensor.mem_size)
+            if start:
+                low=min(low,self.aligned_mem_addr+self.aligned_mem_size+rel_addr)
+                high=max(high,self.aligned_mem_addr+self.aligned_mem_size+rel_addr+self.align(tensor.mem_size))
+        release_slots=[]
+        if low is None and high is None:
+            if len(self.un_released_addr)>0:
+                release_slots.append(self.un_released_addr)
+                self.un_released_addr=[]
+        else:
+            if low>self.un_released_addr[0]:
+                release_slots.append([self.un_released_addr[0],low])
+                self.un_released_addr[0]=low
+            if high<self.un_released_addr[1]:
+                release_slots.append([high,self.un_released_addr[1]])
+                self.un_released_addr[1]=high
+
+        return release_slots
+
+
+
+
+
+
+
+
+
 def check_slots(mem_slots):
     for i in range(len(mem_slots)-1):
-        if mem_slots[i][1]<=mem_slots[i+1][0]:
+        if mem_slots[i][1]>=mem_slots[i+1][0]:
             return False
     return True
 
@@ -250,17 +290,21 @@ class MemSlots:
                     self.release_addr.insert(pos, mem_addr)
     def recycle(self,mem_spaces,recycle_time):
         for mem_space in mem_spaces:
-            if mem_space.end<=recycle_time and mem_space.idx not in self.released_idx:
-                self.release_mem(mem_space.aligned_mem_addr+mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1],mem_space.align(mem_space.tensors[-1].mem_size),recycle_time)
-                # assert check_slots(mem_slots)
-                self.released_idx.add(mem_space.idx)
-            if mem_space.last_tensor_begin+1==recycle_time and mem_space.patial_released is False and len(mem_space.tensors)>1:
-                if mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1]!=0:
-                    self.release_mem(mem_space.aligned_mem_addr,mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1],recycle_time)
-                if mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size)!=0:
-                    self.release_mem(mem_space.aligned_mem_addr+mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size),
-                                     -(mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size)),recycle_time)
-                mem_space.patial_released=True
+
+            # if mem_space.last_tensor_begin+1<=recycle_time and mem_space.patial_released is False and len(mem_space.tensors)>1:
+            #     if mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1]!=0:
+            #         self.release_mem(mem_space.aligned_mem_addr,mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1],recycle_time)
+            #     if mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size)!=0:
+            #         self.release_mem(mem_space.aligned_mem_addr+mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size),
+            #                          -(mem_space.rel_aligned_addr[-1]+mem_space.align(mem_space.tensors[-1].mem_size)),recycle_time)
+            #     mem_space.patial_released=True
+            # if mem_space.end<=recycle_time and mem_space.idx not in self.released_idx:
+            #     self.release_mem(mem_space.aligned_mem_addr+mem_space.aligned_mem_size+mem_space.rel_aligned_addr[-1],mem_space.align(mem_space.tensors[-1].mem_size),recycle_time)
+            #     self.released_idx.add(mem_space.idx)
+            release_slots=mem_space.get_release_addr(recycle_time)
+            for release_slot in release_slots:
+                self.release_mem(release_slot[0],release_slot[1]-release_slot[0],recycle_time)
+            assert check_slots(self.mem_slots)
 
 
 def create_mem_spaces(mte_graph:MteGraph):
@@ -285,10 +329,10 @@ def create_mem_spaces(mte_graph:MteGraph):
         assert len(output_tensors)==1
         output_tensor=output_tensors[0]
         if mte_op.inplace:
-            first_input_idx=input_tensors[0].tensor_idx
+            inplace_tensor_idx=mte_op.inplace_tensor_idx
             is_in_mem_spaces=False
             for mem_space in mem_spaces:
-                if mem_space.last_tensor_idx==first_input_idx:
+                if mem_space.last_tensor_idx==inplace_tensor_idx:
                     mem_space.add_mem(output_tensor,run_id,mte_op.inplace_offset)
                     is_in_mem_spaces=True
             assert is_in_mem_spaces
@@ -324,6 +368,9 @@ def show_memory_distribution(mem_spaces:list[InplaceMemBlock],peak_mem,vis_name=
             rects.append(
                 patches.Rectangle((begin, tensor.mem_addr), end - begin-0.5, tensor.mem_size, edgecolor='red', facecolor=color, linewidth=0.1,alpha=0.5)
             )
+        rects.append(
+            patches.Rectangle((mem_space.begin, mem_space.mem_addr), mem_space.last_tensor_begin-mem_space.begin+0.5, mem_space.mem_size, edgecolor='red', facecolor=color, linewidth=0.1,alpha=0.1)
+        )
     for rect in rects:
         ax.add_patch(rect)
     end=-1
@@ -409,12 +456,12 @@ def static_allocate_memory(mem_spaces):
         return None,None,None
 
 
-def allocate_tensor_memory(mte_graph:MteGraph,vis_name=None,vis_path=None):
+def allocate_tensor_memory(mte_graph:MteGraph,fit_method="first_fit",vis_name=None,vis_path=None):
 
     mem_spaces=create_mem_spaces(mte_graph)
     mem_spaces.sort(key=lambda x:x.begin*100000-x.aligned_mem_size)
 
-    mem_spaces,peak_mem=allocate_memory(mem_spaces,"first_fit")
+    mem_spaces,peak_mem=allocate_memory(mem_spaces,fit_method)
     # mem_spaces,allocated_tensor_mems,peak_mem=static_allocate_memory(mem_spaces)
     # mem_spaces[-1].aligned_mem_addr-=mem_spaces[-2].aligned_mem_addr
     # mem_spaces[-2].aligned_mem_addr=00

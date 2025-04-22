@@ -16,7 +16,7 @@ void L1_cache_enable()
 {
     SCB_EnableICache();
     SCB_EnableDCache();
-    SCB->CACR |= (1 << 2);
+//    SCB->CACR |= (1 << 2);
 }
 
 int main(void)

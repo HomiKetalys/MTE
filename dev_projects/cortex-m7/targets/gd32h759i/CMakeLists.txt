@@ -43,6 +43,10 @@ foreach(file ${MTE_SOURCES})
     set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "-O3")
 endforeach()
 
+foreach(file ${MODEL_SOURCES})
+    set_source_files_properties(${file} PROPERTIES COMPILE_FLAGS "-O3")
+endforeach()
+
 set(CMAKE_C_FLAGS "-gdwarf-2 -mcpu=cortex-m7 -mthumb -mthumb-interwork -fdata-sections -ffunction-sections -mfloat-abi=hard -mfpu=fpv5-d16")
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -Wl,-Map=memory.map -T${CMAKE_SOURCE_DIR}/flash.ld")
 

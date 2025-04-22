@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 
-from ..op_parse import Reshape, Transpose, MteTensor, Identity
+from ..op_parse import Reshape, Transpose, MteTensor, Identity, Gather
 from ..base import MteGraph
 from .utils import register_graph_optimizer
 
@@ -22,8 +22,8 @@ def optimize_reshape(mte_graph:MteGraph):
 @register_graph_optimizer(0)
 def remove_redundant_ops(mte_graph:MteGraph):
     run_seq=copy.deepcopy(mte_graph.run_seq)
-    for run_idx in run_seq:
-        mte_op=mte_graph.get_op(run_idx)
+    for op_idx in run_seq:
+        mte_op=mte_graph.get_op(op_idx)
         if mte_op is None:
             continue
         if isinstance(mte_op,Transpose):
@@ -52,3 +52,16 @@ def remove_redundant_ops(mte_graph:MteGraph):
                                 mte_graph.replace_op(next_op,Identity())
                                 mte_graph.remove_op_input_tensor(nnext_op,nnext_op.input_tensors[1])
                                 mte_graph.replace_op(nnext_op,Identity())
+@register_graph_optimizer(4)
+def remove_all_gather_op(mte_graph:MteGraph):
+    run_seq=copy.deepcopy(mte_graph.run_seq)
+    for op_idx in run_seq:
+        mte_op=mte_graph.get_op(op_idx)
+        if mte_op is None:
+            continue
+        if isinstance(mte_op,Gather):
+            input_tensor0:MteTensor=mte_op.input_tensors[0]
+            input_tensor1:MteTensor=mte_op.input_tensors[1]
+            if input_tensor0.shape[mte_op.dim]==input_tensor1.shape[0]:
+                mte_graph.remove_op_input_tensor(mte_op,input_tensor1)
+                mte_graph.replace_op(mte_op,Identity())

@@ -1,4 +1,5 @@
 import numpy as np
+from tensorflow.python.ops.stateful_random_ops import SEED_MAX
 
 from ..base import OPERATOR, MteOp, ModelReader,TFLiteReader, MteTensor
 
@@ -112,10 +113,11 @@ class Transpose(MteOp):
         return func
 
 class Concat(MteOp):
-    _inplace=False
+    _inplace=True
     def __init__(self, op_idx=None,dim=None):
         super().__init__(op_idx)
         self.dim=dim
+        self.ins_inplace=True
 
     def op_post_process(self):
         addr_tensor=MteTensor(
@@ -143,7 +145,21 @@ class Concat(MteOp):
             data=np.array([t.shape[self.dim]*block_size for t in self.input_tensors])
         )
         block_size_tensor.in_ram=False
+        max_size_tensor=self.input_tensors[0]
+        for input_tensor in self.input_tensors[1:-2]:
+            if input_tensor.size>max_size_tensor.size:
+                max_size_tensor=input_tensor
+        self.input_inplace_idx=max_size_tensor.tensor_idx
+
         return [addr_tensor,block_size_tensor]
+
+    @property
+    def inplace_offset(self):
+        max_size_tensor=self.input_tensors[0]
+        for input_tensor in self.input_tensors[1:-2]:
+            if input_tensor.size>max_size_tensor.size:
+                max_size_tensor=input_tensor
+        return max_size_tensor.size-self.output_tensors[0].size
 
     def input_mem_addrs(self):
         mem_addrs=[t.mem_addr for t in self.input_tensors[:self.input_tensors[-1].size]]
@@ -189,10 +205,11 @@ class Pack(MteOp):
         return func
 
 class Gather(MteOp):
-    _inplace=False
+    _inplace=True
     def __init__(self, op_idx=None,dim=None):
         super().__init__(op_idx)
         self.dim=dim
+        self.ins_inplace=True
 
     def op_post_process(self):
         self.input_tensors[1].in_ram=False

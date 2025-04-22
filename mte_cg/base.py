@@ -120,12 +120,13 @@ class MteGraph:
         return ops_table
 
     def fix_inplace(self):
-        for run_idx in self.run_seq:
-            mte_op:MteOp=self.ops_table[run_idx]
-            input_tensor:MteTensor=mte_op.input_tensors[0]
-            for to_op in input_tensor.to_ops:
-                if to_op.op_idx !=mte_op.op_idx:
-                    to_op.ins_inplace=False
+        for run_idx,op_idx in enumerate(self.run_seq):
+            mte_op:MteOp=self.ops_table[op_idx]
+            for input_tensor in mte_op.input_tensors:
+                input_tensor:MteTensor=input_tensor
+                for to_op in input_tensor.to_ops:
+                    if self.run_seq.index(to_op.op_idx)<run_idx:
+                        to_op.ins_inplace=False
 
 
     def connect_table(self):
@@ -297,12 +298,17 @@ class MteOp:
             MteOp._extra_op_id+=1
         self.op_idx=op_idx
         self.ins_inplace=False
+
         self.input_tensors:list[MteTensor]=[]
         self.output_tensors:list[MteTensor]=[]
 
     @property
     def inplace_offset(self):
         return 0
+
+    @property
+    def inplace_tensor_idx(self):
+        return self.input_tensors[0].tensor_idx
 
     @property
     def inplace(self):

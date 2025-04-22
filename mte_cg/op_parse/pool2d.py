@@ -47,15 +47,15 @@ from ..base import OPERATOR, MteOp, ModelReader, TFLiteReader
 #                 f"{self.output_tensors[0].mem_symbol},{self.output_tensors[0].shape[1]},{self.output_tensors[0].shape[2]}"
 #                 f")")
 
-@OPERATOR.register_operator("AVERAGE_POOL_2D")
-def avg_pood2d_parse_func(op_idx, model_reader:ModelReader):
-    op = AvgPool2d(op_idx)
-    return op
-
-class AvgPool2d(MteOp):
-    _inplace=False
-    def __init__(self, op_idx):
-        super().__init__(op_idx)
-
-    def get_call_func(self):
-        return "avg_pool2d()"
+# @OPERATOR.register_operator("AVERAGE_POOL_2D")
+# def avg_pood2d_parse_func(op_idx, model_reader:ModelReader):
+#     op = AvgPool2d(op_idx)
+#     return op
+#
+# class AvgPool2d(MteOp):
+#     _inplace=False
+#     def __init__(self, op_idx):
+#         super().__init__(op_idx)
+#
+#     def get_call_func(self):
+#         return "avg_pool2d()"

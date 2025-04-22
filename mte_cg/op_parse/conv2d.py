@@ -74,7 +74,7 @@ implemented_conv_configs=[
 ]
 
 implemented_dwconv_configs=[
-    [-1,-1,((3,3),(5,5),(7,7)),-1,((1,1),),-1],
+    [-1,-1,((3,3),(5,5),(7,7),(1,5),(5,1)),-1,((1,1),),-1],
 ]
 
 class Conv2d(MteOp):

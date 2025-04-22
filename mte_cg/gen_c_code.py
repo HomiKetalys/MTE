@@ -16,8 +16,8 @@ def gen_model_call(model_name,mte_graph:MteGraph,file_path):
     func="#include \"mte_models.h\"\n"
     func+=f"#include \"{model_name}_params.h\"\n"
     func+=f"void {model_name}(){{\n"
-    for run_idx in mte_graph.run_seq:
-        mte_op:MteOp=mte_graph.get_op(run_idx)
+    for op_idx in mte_graph.run_seq:
+        mte_op:MteOp=mte_graph.get_op(op_idx)
         func+=f"    /*op idx:{mte_op.op_idx},op_name:{mte_op.__class__.__name__}*/\n"
         func+="    "+mte_op.get_call_func()
         func+=";\n"
@@ -79,8 +79,8 @@ def gen_ops_c_file(model_infos,file_path):
     c_file_paths=set()
     for mte_graph,model_name,peak_mem in model_infos:
         mte_graph:MteGraph=mte_graph
-        for run_idx in mte_graph.run_seq:
-            mte_op:MteOp=mte_graph.get_op(run_idx)
+        for op_idx in mte_graph.run_seq:
+            mte_op:MteOp=mte_graph.get_op(op_idx)
             paths=mte_op.get_c_file_paths()
             for path in paths:
                 c_file_paths.add(os.path.abspath(path))
