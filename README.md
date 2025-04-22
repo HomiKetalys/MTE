@@ -35,19 +35,20 @@ git submodule update --init --recursive
 ## 生成代码
 
 以生成一个在COCO2017数据集上训练好的目标检测模型[yolov10t](assets/yolov10t.tflite)为例,运行以下代码生成yolov10t的C语言代码。
+
 ```python
 from mte_cg.gen_c_model import gen_codes_from_models
 # If you have defined op, import the py file of your custom op
-import examples.custom_op
+import mte_cg.examples.custom_op
 
 if __name__ == '__main__':
-    model_paths=[
+    model_paths = [
         "./assets/yolov10t.tflite",
     ]
-    model_names=[
+    model_names = [
         "network_1",
     ]
-    gen_codes_from_models(model_paths,"./temp/c_codes","./temp",model_names=model_names)
+    gen_codes_from_models(model_paths, "./temp/c_codes", "./temp", model_names=model_names)
 ```
 随后程序将会在指定位置生成代码以及中间文件， 如yolov10t模型的内存分配图示。
 <img src="assets/yolov10t_mem.png" width="800" height="600" alt="yolov10t_mem">

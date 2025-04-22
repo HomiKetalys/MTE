@@ -1,6 +1,6 @@
 from mte_cg.gen_c_model import gen_codes_from_models
 # If you have defined op, import the py file of your custom op
-import examples.custom_op
+from mte_cg.examples import custom_op
 
 if __name__ == '__main__':
     model_paths=[

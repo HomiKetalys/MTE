@@ -1,6 +1,5 @@
 import os
-
-from mte_cg.base import MteOp, ModelReader, OPERATOR, TFLiteReader
+from ..base import MteOp, ModelReader, OPERATOR, TFLiteReader
 
 
 def get_max_pool2d_op_options(op_idx, model_reader:ModelReader):
