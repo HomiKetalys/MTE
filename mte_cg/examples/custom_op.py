@@ -31,12 +31,13 @@ def max_pood2d_parse_func(op_idx, model_reader:ModelReader):
     return op
 
 class MaxPool2d(MteOp):
-    _inplace=False
+    _inplace=True
     def __init__(self, op_idx=None,kernel_size=(1,1),stride=(1,1),padding=((0,0),(0,0))):
         super().__init__(op_idx)
         self.kernel_size=kernel_size
         self.stride=stride
         self.padding=padding
+        self.ins_inplace=True
 
     def get_call_func(self):
         shape=self.input_tensors[0].shape
