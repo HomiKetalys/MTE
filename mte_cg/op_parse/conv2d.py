@@ -138,7 +138,6 @@ class Conv2d(MteOp):
             data=scale,
         )
         h,w,c=self.input_tensors[0].shape[1:]
-
         if self.dwconv:
             buffer_tensor=MteTensor(
                 tensor_idx=None,
@@ -155,7 +154,7 @@ class Conv2d(MteOp):
             buffer_tensor=MteTensor(
                 tensor_idx=None,
                 dtype="int16",
-                shape=(2,c*self.kernel_size[0]*self.kernel_size[1]),
+                shape=(2,c),
                 tensor_type="buffer",
             )
         return [scale_tensor,buffer_tensor]
